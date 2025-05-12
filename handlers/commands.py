@@ -1,10 +1,10 @@
 from aiogram.filters import CommandStart, Command
-from aiogram import types, Router
+from aiogram import Router
 from config.settings import dp  
-from aiogram.types import Message, User, Chat
+from aiogram.types import Message
 import requests
-import requests_cache
 from dotenv import load_dotenv
+
 from requests_cache import CachedSession
 import os 
 import datetime
@@ -23,6 +23,7 @@ cryptopanic_session = CachedSession(
     expire_after=300,
     backend='sqlite'
 )
+
 
 router = Router()
  
@@ -158,7 +159,7 @@ async def ath(message: Message) -> None:
 
 # Comando /fear
 # Retorna o índice de medo e ganância do mercado
-@router.message(Command("fear"))
+@router.message(Command("medo"))
 async def fear_and_greed(message: Message) -> None:
     try:
         await message.answer("🔄 Buscando o índice de medo e ganância...")
@@ -222,7 +223,73 @@ async def news(message: Message) -> None:
         
     except requests.exceptions.RequestException as e:
         await message.answer(f"⚠️ Erro na API: <code>{e}</code>", parse_mode="HTML")
+
+user_alerts = {}  # Dicionário para armazenar os alertas dos usuários
+@router.message(Command("alerta"))
+async def alert(message: Message) -> None:
+    try:
+        # Exemplo de comando: /alerta bitcoin 30000 mais
+        parts = message.text.strip().split()
+        if len(parts) != 4:
+            await message.answer(
+                "❌ Formato inválido. Use: /alerta <moeda> <valor> <mais|menor>\n"
+                "Exemplo: /alerta bitcoin 30000 mais"
+            )
+            return
+
+        coin = parts[1].lower()
+        value = float(parts[2])
+        direction = parts[3].lower()
+
+        if direction not in ("mais", "menor"):
+            await message.answer("❌ A direção deve ser 'mais' ou 'menor'.")
+            return
+
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin}&vs_currencies=usd"
+        headers = {"accept": "application/json", "x-cg-demo-api-key": os.getenv("API_KEY_COINGECKO")}
+        await message.answer("🔄 Buscando o preço atual...")
         
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        
+        
+        if coin not in data:
+            await message.answer(f"❌ Moeda <b>{coin}</b> não encontrada.", parse_mode="HTML")
+            return
+
+        current_price = data[coin]['usd']
+        await message.answer(
+            f"🔔 Alerta configurado para <b>{coin}</b> a <b>${value}</b> ({direction}).\n"
+            f"Preço atual: <b>${current_price}</b>",
+            parse_mode="HTML"
+        )
+
+        # Salvar o alerta
+        user_id = message.from_user.id
+        user_alerts.setdefault(user_id, []).append((coin, value, direction))
+
+    except ValueError:
+        await message.answer("❌ Valor inválido. Certifique-se de usar um número, por exemplo: 30000")
+    except Exception as e:
+        await message.answer(f"⚠️ Erro ao configurar alerta: {str(e)}")
+        
+@router.message(Command("ajuda"))
+async def help(message: Message) -> None:
+
+    await message.answer(
+        "🤖 Olá! Eu sou o ChainAlertBot. Aqui estão os comandos que você pode usar:\n\n"
+        "<b>/start</b> - Inicia o bot e mostra uma mensagem de boas-vindas\n\n"
+        "<b>/preço [moeda]</b> - Verifica o preço atual de uma moeda (ex: /preço bitcoin)\n"
+        "<b>/top10</b> - Mostra as 10 principais moedas por capitalização de mercado\n"
+        "<b>/ath [moeda]</b> - Verifica o preço mais alto de todos os tempos (ATH) de uma moeda (ex: /ath bitcoin)\n"
+        "<b>/medo</b> - Mostra o índice de medo e ganância do mercado\n"
+        "<b>/noticias</b> - Mostra as últimas notícias sobre criptomoedas\n"
+        "<b>/alerta [moeda] [valor] [mais|menor]</b> - Configura um alerta para uma moeda\n  "
+        "<b>/ajuda</b> - Mostra esta mensagem de ajuda\n"
+    )
+    
 @router.message()  # Sem filtros = captura qualquer mensagem
 async def handle_unknown(message: Message):
     await message.answer("🤖 Comando não reconhecido. Tente novamente um comando reconhecido!")
+    
+
