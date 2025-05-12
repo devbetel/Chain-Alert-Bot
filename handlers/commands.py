@@ -34,9 +34,9 @@ async def start(message: Message) -> None:
     await message.answer(f"Olá, {message.from_user.first_name}! Eu sou o ChainAlertBot. "
                         "Eu vou notificá-lo sobre as últimas notícias no mundo das criptomoedas. 🚀")
 
-# Comando /preço 
-# Retorna o preço de uma moeda específica
-@router.message(Command("preço"))
+# Comando /preco 
+# Retorna o preco de uma moeda específica
+@router.message(Command("preco"))
 async def check_price(message: Message) -> None:
     try:
         # Extrai a moeda do comando (ex: /preço bitcoin)
@@ -279,7 +279,7 @@ async def help(message: Message) -> None:
     await message.answer(
         "🤖 Olá! Eu sou o ChainAlertBot. Aqui estão os comandos que você pode usar:\n\n"
         "<b>/start</b> - Inicia o bot e mostra uma mensagem de boas-vindas\n\n"
-        "<b>/preço [moeda]</b> - Verifica o preço atual de uma moeda (ex: /preço bitcoin)\n"
+        "<b>/preco [moeda]</b> - Verifica o preço atual de uma moeda (ex: /preço bitcoin)\n"
         "<b>/top10</b> - Mostra as 10 principais moedas por capitalização de mercado\n"
         "<b>/ath [moeda]</b> - Verifica o preço mais alto de todos os tempos (ATH) de uma moeda (ex: /ath bitcoin)\n"
         "<b>/medo</b> - Mostra o índice de medo e ganância do mercado\n"
