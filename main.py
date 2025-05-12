@@ -18,7 +18,7 @@ dp.message.middleware(LoggingMiddleware())  # Adiciona o middleware de logging
 dp.include_router(commands.router)  # Inclui o roteador de comandos no dispatcher
 
 async def main():
-    await dp.start_polling(bot)  # Agora o bot é passado no start_polling
+    await dp.start_polling(bot, skip_updates=True)  # Agora o bot é passado no start_polling
 
 if __name__ == '__main__':
     print("Bot is polling...")
